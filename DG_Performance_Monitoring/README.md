@@ -11,7 +11,7 @@
 ## Students
 	Vasu Singhal		2018101074
 	Dhruv Sharma		2018101095
-	Daksh Rawat			2018101087
+	Daksh Rawat		2018101087
 
 ************************************
 

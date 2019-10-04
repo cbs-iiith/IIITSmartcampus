@@ -9,8 +9,8 @@
 	Sam Babu, G.		sambabug@gmail.com
 
 ## Students
-	Dhruv Arya			2018101003
-	Jay Sharma			2018101033
+	Dhruv Arya		2018101003
+	Jay Sharma		2018101033
 	Mohammad Nomaan		2018111027
 
 ************************************

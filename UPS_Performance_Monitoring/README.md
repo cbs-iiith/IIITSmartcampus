@@ -5,11 +5,11 @@
 ## Faculty
 	Prof Vishal Garg	vishal@iiit.ac.in
 
-## TA
+## TAs
 	Sam Babu, G.		sambabug@gmail.com
 
 ## Students
-	Parv Joshi			2018101062
+	Parv Joshi		2018101062
 	Siddharth Jain		2018101038
 	Priyanshu Madaan	2018101097
 
