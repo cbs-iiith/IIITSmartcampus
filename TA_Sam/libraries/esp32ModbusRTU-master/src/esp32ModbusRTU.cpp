@@ -113,6 +113,7 @@ void esp32ModbusRTU::_send(uint8_t* data, uint8_t length) {
   digitalWrite(_rtsPin, HIGH);
   _serial->write(data, length);
   _serial->flush();
+  delayMicroseconds(1000);
   digitalWrite(_rtsPin, LOW);
   _lastMillis = millis();
 }
