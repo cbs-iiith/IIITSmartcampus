@@ -116,9 +116,11 @@ void setup_modbus() {
     Serial.printf(", EM_IDX_PF_R_PAHSE: %.2f", em_buffer[EM_IDX_PF_R_PAHSE]);
     Serial.printf(", EM_IDX_VA_R_PHASE: %.2f\n", em_buffer[EM_IDX_VA_R_PHASE]);
   });
+  
   modbus.onError([](esp32Modbus::Error error) {
     Serial.printf("error: 0x%02x\n", static_cast<uint8_t>(error));
   });
+  
   modbus.begin();
 }
 
