@@ -15,8 +15,8 @@
 
 //SHT21 Temperature & Rh sensor connected to I2C
 //I2C defines
-#define I2C_SCL                        22
-#define I2C_SDA                        21
+#define I2C_SCL                        21
+#define I2C_SDA                        22
 
 //SHT21 defines
 #define SHT21_POLLING_INTERVAL         10000
@@ -35,8 +35,17 @@
 //Energy meter defines
 #define EM_POLLING_INTERVAL            10000
 #define EM_ADDRESS                     0x01
-#define EM_REG_ADDR                    142
-#define EM_REG_LEN                     16
+#define EM_REG_ADDR                    100
+#define EM_REG_LEN                     60
+
+#define EM_IDX_WATTS_R_PHASE           1
+#define EM_IDX_VAR_R_PHASE             5
+#define EM_IDX_PF_R_PAHSE              9
+#define EM_IDX_VA_R_PHASE              14
+#define EM_IDX_V_R_PHASE               21
+#define EM_IDX_A_R_PHASE               25
+#define EM_IDX_FREQUENCY               28
+#define EM_IDX_VRY_PHASE               17
 
 void setup_i2c();
 void setup_modbus();
@@ -96,14 +105,24 @@ void setup_modbus() {
 
     em_buffer = (float*) buffer;
 
-    Serial.printf("em_buffer[0]: %.2f", em_buffer[0]);
-    Serial.printf(", em_buffer[1]: %.2f", em_buffer[1]);
-    Serial.printf(", em_buffer[2]: %.2f", em_buffer[2]);
-    Serial.printf(", em_buffer[3]: %.2f\n", em_buffer[3]);
-    Serial.printf("em_buffer[4]: %.2f", em_buffer[4]);
-    Serial.printf(", em_buffer[5]: %.2f", em_buffer[5]);
-    Serial.printf(", em_buffer[6]: %.2f", em_buffer[6]);
-    Serial.printf(", em_buffer[7]: %.2f\n", em_buffer[7]);
+/*
+#define EM_IDX_WATTS_R_PHASE           1
+#define EM_IDX_VAR_R_PHASE             5
+#define EM_IDX_PF_R_PAHSE              9
+#define EM_IDX_VA_R_PHASE              14
+#define EM_IDX_V_R_PHASE               21
+#define EM_IDX_A_R_PHASE               25
+#define EM_IDX_FREQUENCY               28
+#define EM_IDX_VRY_PHASE               17
+*/
+    Serial.printf("EM_IDX_V_R_PHASE: %.2f", em_buffer[EM_IDX_V_R_PHASE]);
+    Serial.printf(", EM_IDX_A_R_PHASE: %.2f", em_buffer[EM_IDX_A_R_PHASE]);
+    Serial.printf(", EM_IDX_FREQUENCY: %.2f", em_buffer[EM_IDX_FREQUENCY]);
+    Serial.printf(", EM_IDX_VRY_PHASE: %.2f\n", em_buffer[EM_IDX_VRY_PHASE]);
+    Serial.printf("EM_IDX_WATTS_R_PHASE: %.2f", em_buffer[EM_IDX_WATTS_R_PHASE]);
+    Serial.printf(", EM_IDX_VAR_R_PHASE: %.2f", em_buffer[EM_IDX_VAR_R_PHASE]);
+    Serial.printf(", EM_IDX_PF_R_PAHSE: %.2f", em_buffer[EM_IDX_PF_R_PAHSE]);
+    Serial.printf(", EM_IDX_VA_R_PHASE: %.2f\n", em_buffer[EM_IDX_VA_R_PHASE]);
   });
   modbus.onError([](esp32Modbus::Error error) {
     Serial.printf("error: 0x%02x\n", static_cast<uint8_t>(error));
