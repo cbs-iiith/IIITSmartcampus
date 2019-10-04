@@ -4,10 +4,6 @@
 #include <esp32ModbusTypeDefs.h>
 #include <ModbusMessage.h>
 
-#include <algorithm>  // for std::reverses
-
-#include <dummy.h>
-
 #include <Wire.h>
 #include <Sodaq_SHT2x.h>
 
@@ -15,11 +11,12 @@
 
 //SHT21 Temperature & Rh sensor connected to I2C
 //I2C defines
-#define I2C_SCL                        21
-#define I2C_SDA                        22
+#define I2C_SDA                        21
+#define I2C_SCL                        22
 
 //SHT21 defines
 #define SHT21_POLLING_INTERVAL         10000
+#define SHT21_ADDR                     0x40
 
 //Energy Meter connected to Modbus RTU
 //UART defines
@@ -64,10 +61,13 @@ void setup() {
 
   Serial.printf("Starting I2C...");
   setup_i2c();
-  if (!Wire1.begin(I2C_SDA, I2C_SCL)) {
+  if (!Wire.begin(I2C_SDA, I2C_SCL)) {
     Serial.printf("Failed to start I2C!\n");
     while (1);
   }
+  Wire.beginTransmission(SHT21_ADDR);
+  Wire.endTransmission();
+  delay(300);
   Serial.printf("Success!\n");
   
 
