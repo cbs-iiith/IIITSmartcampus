@@ -59,14 +59,14 @@ void setup() {
     Serial.printf("Failed to start I2C!\n");
     while (1);
   }
-  Serial.printf("Success!");
+  Serial.printf("Success!\n");
   
 
   Serial.printf("Start Modbus RTU...");
   // start the Modbus RTUs
   Serial1.begin(UART_BAUD_RATE, UART_CONFIG, UART_RX, UART_TX);
   setup_modbus();
-  Serial.printf("Done!");
+  Serial.printf("Done!\n");
 }
 
 void loop() {
