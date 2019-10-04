@@ -49,9 +49,11 @@ void setup_modbus();
 void sensor_temp_rh();
 void energy_meter();
 
+//Buffer t store Temperature & Humity values
 float* sht21_buffer = new float[2];
+
+//Buffer to store the Energy Meter values
 float* em_buffer = new float[EM_REG_LEN/2];
-    
 
 esp32ModbusRTU modbus(&Serial1, UART_RTS);
 
@@ -61,7 +63,7 @@ void setup() {
 
   Serial.printf("Starting I2C...");
   setup_i2c();
-  if (!Wire.begin(I2C_SDA, I2C_SCL)) {
+  if (!Wire.begin(I2C_SDA, I2C_SCL, 100000)) {
     Serial.printf("Failed to start I2C!\n");
     while (1);
   }
