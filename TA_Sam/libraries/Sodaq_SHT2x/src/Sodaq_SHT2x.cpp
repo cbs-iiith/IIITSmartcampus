@@ -114,12 +114,12 @@ uint16_t SHT2xClass::readSensor(uint8_t command)
 
     Wire.beginTransmission(eSHT2xAddress);
     Wire.write(command);
-    //delay(100);
+    delay(100);
     Wire.endTransmission();
-    delay(500);
+    //delay(500);
 
     Wire.requestFrom(eSHT2xAddress, 3);
-    uint32_t timeout = millis() + 500;       // Don't hang here for more than 300ms
+    uint32_t timeout = millis() + 300;       // Don't hang here for more than 300ms
     while (Wire.available() < 3) {
         if ((millis() - timeout) > 0) {
             return 0;
