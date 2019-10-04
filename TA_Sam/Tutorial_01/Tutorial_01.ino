@@ -53,7 +53,7 @@ void energy_meter();
 float* sht21_buffer = new float[2];
 
 //Buffer to store the Energy Meter values
-float* em_buffer = new float[EM_REG_LEN/2];
+float* em_buffer = new float[EM_REG_LEN / 2];
 
 esp32ModbusRTU modbus(&Serial1, UART_RTS);
 
@@ -62,16 +62,15 @@ void setup() {
   Serial.begin(CONSOLE_BAUD_RATE);
 
   Serial.printf("Starting I2C...");
-  setup_i2c();
+  pinMode(I2C_SCL, INPUT_PULLUP);           // set pin to input
+  pinMode(I2C_SDA, INPUT_PULLUP);           // set pin to input
   if (!Wire.begin(I2C_SDA, I2C_SCL, 100000)) {
     Serial.printf("Failed to start I2C!\n");
     while (1);
   }
-  Wire.beginTransmission(SHT21_ADDR);
-  Wire.endTransmission();
-  delay(300);
+  setup_i2c();
   Serial.printf("Success!\n");
-  
+
 
   Serial.printf("Start Modbus RTU...");
   // start the Modbus RTUs
@@ -88,35 +87,26 @@ void loop() {
 
 void setup_i2c() {
   //i2c setup
-  pinMode(I2C_SCL, INPUT_PULLUP);           // set pin to input
-  pinMode(I2C_SDA, INPUT_PULLUP);           // set pin to input
+  Wire.beginTransmission(SHT21_ADDR);
+  Wire.endTransmission();
+  delay(300);
+
 }
 
 void setup_modbus() {
   //modbus setup
   modbus.onData([](uint8_t serverAddress, esp32Modbus::FunctionCode fc, uint8_t* data, size_t length) {
     //Serial.printf("id 0x%02x fc 0x%02x len %u: 0x", serverAddress, fc, length);
-    
+
     uint8_t* buffer = new uint8_t[length];
     for (size_t i = 0; i < length; ++i) {
-      (i%2 == 0) ? buffer[i] = data[i+1] : buffer[i] = data[i-1];
+      (i % 2 == 0) ? buffer[i] = data[i + 1] : buffer[i] = data[i - 1];
       //Serial.printf(" d:%02x", data[i]);
       //Serial.printf(" b:%02x", buffer[i]);
     }
     //Serial.printf(" DONE\n");
 
     em_buffer = (float*) buffer;
-
-/*
-#define EM_IDX_WATTS_R_PHASE           1
-#define EM_IDX_VAR_R_PHASE             5
-#define EM_IDX_PF_R_PAHSE              9
-#define EM_IDX_VA_R_PHASE              14
-#define EM_IDX_V_R_PHASE               21
-#define EM_IDX_A_R_PHASE               25
-#define EM_IDX_FREQUENCY               28
-#define EM_IDX_VRY_PHASE               17
-*/
     Serial.printf("EM_IDX_V_R_PHASE: %.2f", em_buffer[EM_IDX_V_R_PHASE]);
     Serial.printf(", EM_IDX_A_R_PHASE: %.2f", em_buffer[EM_IDX_A_R_PHASE]);
     Serial.printf(", EM_IDX_FREQUENCY: %.2f", em_buffer[EM_IDX_FREQUENCY]);
