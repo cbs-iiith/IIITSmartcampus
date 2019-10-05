@@ -47,7 +47,7 @@
 #define EM_IDX_VRY_PHASE               17
 
 const char* ssid = "CBS Beam";
-//const char* ssid = "CBS Beam 5GHz";
+//const char* ssid = "CBS Beam 5GHz";   //not working, unable to connect ti 5GHz n/w
 const char* password = "Bsrc12#$";
 
 void setup_wifi();
@@ -70,31 +70,19 @@ esp32ModbusRTU modbus(&Serial1, UART_RTS);
 void setup() {
   // put your setup code here, to run once:
   Serial.println("###################################### Starting Setup ##############################################");
-
   Serial.begin(CONSOLE_BAUD_RATE);
-
+  Serial.println("Connecting WiFI...");
   setup_wifi();
-
+  Serial.printf("Done!\n");
   Serial.println("####################################################################################################");
-
   Serial.printf("Starting I2C...");
-  pinMode(I2C_SCL, INPUT_PULLUP);           // set pin to input
-  pinMode(I2C_SDA, INPUT_PULLUP);           // set pin to input
-  if (!Wire.begin(I2C_SDA, I2C_SCL, 100000)) {
-    Serial.printf("Failed to start I2C!\n");
-    while (1);
-  }
   setup_i2c();
   Serial.printf("Success!\n");
-
   Serial.println("####################################################################################################");
-
   Serial.printf("Start Modbus RTU...");
   // start the Modbus RTUs
-  Serial1.begin(UART_BAUD_RATE, UART_CONFIG, UART_RX, UART_TX);
   setup_modbus();
   Serial.printf("Done!\n");
-
   Serial.println("###################################### Endof Setup #################################################");
   Serial.println("###################################### Starting Loop ###############################################");
 }
@@ -105,16 +93,43 @@ void loop() {
   energy_meter();
 }
 
+
+/*
+   Start of Temp/Rh Sensors functions
+*/
 void setup_i2c() {
   //i2c setup
+  pinMode(I2C_SCL, INPUT_PULLUP);           // set pin to input
+  pinMode(I2C_SDA, INPUT_PULLUP);           // set pin to input
+  if (!Wire.begin(I2C_SDA, I2C_SCL, 100000)) {
+    Serial.printf("Failed to start I2C!\n");
+    while (1);
+  }
   Wire.beginTransmission(SHT21_ADDR);
   Wire.endTransmission();
   delay(300);
-
 }
 
+void sensor_temp_rh() {
+  static uint32_t lastMillisSH21 = 0;
+  if (millis() - lastMillisSH21 > SHT21_POLLING_INTERVAL) {
+    lastMillisSH21 = millis();
+    sht21_buffer[0] = SHT2x.GetHumidity();
+    sht21_buffer[1] = SHT2x.GetTemperature();
+    Serial.printf("Humidity(%RH): %.2f, Temperature(C): %.2f\n", sht21_buffer[0], sht21_buffer[1]);
+  }
+}
+/*
+   Endof Temp/Rh Sensors functions
+*/
+
+/*
+   Start of Energy Meter functions
+*/
 void setup_modbus() {
   //modbus setup
+  Serial1.begin(UART_BAUD_RATE, UART_CONFIG, UART_RX, UART_TX);
+  
   modbus.onData([](uint8_t serverAddress, esp32Modbus::FunctionCode fc, uint8_t* data, size_t length) {
     //Serial.printf("id 0x%02x fc 0x%02x len %u: 0x", serverAddress, fc, length);
 
@@ -144,25 +159,6 @@ void setup_modbus() {
   modbus.begin();
 }
 
-/*
-   Start of Temp/Rh Sensors functions
-*/
-void sensor_temp_rh() {
-  static uint32_t lastMillisSH21 = 0;
-  if (millis() - lastMillisSH21 > SHT21_POLLING_INTERVAL) {
-    lastMillisSH21 = millis();
-    sht21_buffer[0] = SHT2x.GetHumidity();
-    sht21_buffer[1] = SHT2x.GetTemperature();
-    Serial.printf("Humidity(%RH): %.2f, Temperature(C): %.2f\n", sht21_buffer[0], sht21_buffer[1]);
-  }
-}
-/*
-   Endof Temp/Rh Sensors functions
-*/
-
-/*
-   Start of Energy Meter functions
-*/
 void energy_meter() {
   static uint32_t lastMillisEM = 0;
   if (millis() - lastMillisEM > EM_POLLING_INTERVAL) {
