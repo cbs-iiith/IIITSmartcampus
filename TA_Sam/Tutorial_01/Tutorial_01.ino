@@ -1,3 +1,5 @@
+#include <WiFi.h>
+
 #include <Arduino.h>
 
 #include <esp32ModbusRTU.h>
@@ -44,6 +46,14 @@
 #define EM_IDX_FREQUENCY               28
 #define EM_IDX_VRY_PHASE               17
 
+const char* ssid = "CBS Beam";
+//const char* ssid = "CBS Beam 5GHz";
+const char* password = "Bsrc12#$";
+
+void setup_wifi();
+void scanNetworks();
+void connectToNetwork();
+String translateEncryptionType(wifi_auth_mode_t encryptionType);
 void setup_i2c();
 void setup_modbus();
 void sensor_temp_rh();
@@ -59,7 +69,13 @@ esp32ModbusRTU modbus(&Serial1, UART_RTS);
 
 void setup() {
   // put your setup code here, to run once:
+  Serial.println("###################################### Starting Setup ##############################################");
+
   Serial.begin(CONSOLE_BAUD_RATE);
+
+  setup_wifi();
+
+  Serial.println("####################################################################################################");
 
   Serial.printf("Starting I2C...");
   pinMode(I2C_SCL, INPUT_PULLUP);           // set pin to input
@@ -71,12 +87,16 @@ void setup() {
   setup_i2c();
   Serial.printf("Success!\n");
 
+  Serial.println("####################################################################################################");
 
   Serial.printf("Start Modbus RTU...");
   // start the Modbus RTUs
   Serial1.begin(UART_BAUD_RATE, UART_CONFIG, UART_RX, UART_TX);
   setup_modbus();
   Serial.printf("Done!\n");
+
+  Serial.println("###################################### Endof Setup #################################################");
+  Serial.println("###################################### Starting Loop ###############################################");
 }
 
 void loop() {
@@ -116,14 +136,17 @@ void setup_modbus() {
     Serial.printf(", EM_IDX_PF_R_PAHSE: %.2f", em_buffer[EM_IDX_PF_R_PAHSE]);
     Serial.printf(", EM_IDX_VA_R_PHASE: %.2f\n", em_buffer[EM_IDX_VA_R_PHASE]);
   });
-  
+
   modbus.onError([](esp32Modbus::Error error) {
     Serial.printf("error: 0x%02x\n", static_cast<uint8_t>(error));
   });
-  
+
   modbus.begin();
 }
 
+/*
+   Start of Temp/Rh Sensors functions
+*/
 void sensor_temp_rh() {
   static uint32_t lastMillisSH21 = 0;
   if (millis() - lastMillisSH21 > SHT21_POLLING_INTERVAL) {
@@ -133,7 +156,13 @@ void sensor_temp_rh() {
     Serial.printf("Humidity(%RH): %.2f, Temperature(C): %.2f\n", sht21_buffer[0], sht21_buffer[1]);
   }
 }
+/*
+   Endof Temp/Rh Sensors functions
+*/
 
+/*
+   Start of Energy Meter functions
+*/
 void energy_meter() {
   static uint32_t lastMillisEM = 0;
   if (millis() - lastMillisEM > EM_POLLING_INTERVAL) {
@@ -142,3 +171,71 @@ void energy_meter() {
     modbus.readHoldingRegisters(EM_ADDRESS, EM_REG_ADDR, EM_REG_LEN);
   }
 }
+/*
+   Endof Energy Meter functions
+*/
+
+/*
+   Start wifi functions
+*/
+void setup_wifi() {
+  scanNetworks();
+  connectToNetwork();
+
+  Serial.println(WiFi.macAddress());
+  Serial.println(WiFi.localIP());
+}
+
+String translateEncryptionType(wifi_auth_mode_t encryptionType) {
+
+  switch (encryptionType) {
+    case (WIFI_AUTH_OPEN):
+      return "Open";
+    case (WIFI_AUTH_WEP):
+      return "WEP";
+    case (WIFI_AUTH_WPA_PSK):
+      return "WPA_PSK";
+    case (WIFI_AUTH_WPA2_PSK):
+      return "WPA2_PSK";
+    case (WIFI_AUTH_WPA_WPA2_PSK):
+      return "WPA_WPA2_PSK";
+    case (WIFI_AUTH_WPA2_ENTERPRISE):
+      return "WPA2_ENTERPRISE";
+  }
+}
+
+void scanNetworks() {
+  int numberOfNetworks = WiFi.scanNetworks();
+  Serial.print("Number of networks found: ");
+  Serial.println(numberOfNetworks);
+
+  for (int i = 0; i < numberOfNetworks; i++) {
+
+    Serial.print("Network name: ");
+    Serial.println(WiFi.SSID(i));
+
+    Serial.print("Signal strength: ");
+    Serial.println(WiFi.RSSI(i));
+
+    Serial.print("MAC address: ");
+    Serial.println(WiFi.BSSIDstr(i));
+
+    Serial.print("Encryption type: ");
+    String encryptionTypeDescription = translateEncryptionType(WiFi.encryptionType(i));
+    Serial.println(encryptionTypeDescription);
+    Serial.println("----------------------------------------------");
+
+  }
+}
+
+void connectToNetwork() {
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Establishing connection to WiFi..");
+  }
+  Serial.println("Connected to network");
+}
+/*
+   EndOF wifi functions
+*/
