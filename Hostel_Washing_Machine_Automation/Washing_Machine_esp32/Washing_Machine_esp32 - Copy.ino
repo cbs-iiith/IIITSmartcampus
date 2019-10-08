@@ -235,4 +235,3 @@ void connectToNetwork() {
 /*
    EndOF wifi functions
 */
-

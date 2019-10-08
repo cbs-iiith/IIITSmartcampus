@@ -7,7 +7,6 @@
 #include <ModbusMessage.h>
 
 #include <Wire.h>
-#include <Sodaq_SHT2x.h>
 
 #define CONSOLE_BAUD_RATE              115200
 
@@ -99,9 +98,12 @@ void loop() {
 */
 void setup_i2c() {
   //i2c setup
-  pinMode(I2C_SCL, INPUT_PULLUP);           // set pin to input
-  pinMode(I2C_SDA, INPUT_PULLUP);           // set pin to input
-  if (!Wire.begin(I2C_SDA, I2C_SCL, 100000)) {
+  
+  //TESTING: not sure if input pullup is required
+  //pinMode(I2C_SCL, INPUT_PULLUP);           // set pin to input
+  //pinMode(I2C_SDA, INPUT_PULLUP);           // set pin to input
+  
+  if (!Wire.begin(I2C_SDA, I2C_SCL, 100000)) { //100000 is the clock frequency, according to sht21 datasheet there is no minimum freq
     Serial.printf("Failed to start I2C!\n");
     while (1);
   }
@@ -114,10 +116,58 @@ void sensor_temp_rh() {
   static uint32_t lastMillisSH21 = 0;
   if (millis() - lastMillisSH21 > SHT21_POLLING_INTERVAL) {
     lastMillisSH21 = millis();
-    sht21_buffer[0] = SHT2x.GetHumidity();
-    sht21_buffer[1] = SHT2x.GetTemperature();
+    sht21_buffer[0] = Humidity();
+    sht21_buffer[1] = Temperature();
     Serial.printf("Humidity(%RH): %.2f, Temperature(C): %.2f\n", sht21_buffer[0], sht21_buffer[1]);
   }
+}
+float Humidity()
+{
+  unsigned int data[2]={0};
+   
+  Wire.beginTransmission(SHT21_ADDR);
+  //Send humidity measurement command
+  Wire.write(0xF5);
+  Wire.endTransmission();
+  delay(500);
+     
+  // Request 2 bytes of data
+  Wire.requestFrom(SHT21_ADDR, 2);
+  // Read 2 bytes of data to get humidity
+  if(Wire.available() == 2)
+  {
+    data[0] = Wire.read();
+    data[1] = Wire.read();
+  }
+     
+  // Convert the data
+  float hum  = ((data[0] * 256.0) + data[1]);
+  hum = ((125 * hum) / 65536.0) - 6;
+  return hum; 
+}
+
+float Temperature()
+{
+  unsigned int data[2]={0};
+  
+  Wire.beginTransmission(SHT21_ADDR);
+  // Send temperature measurement command
+  Wire.write(0xF3);
+  Wire.endTransmission();
+  delay(500);
+     
+  // Request 2 bytes of data
+  Wire.requestFrom(SHT21_ADDR, 2);
+   
+  // Read 2 bytes of data for temperature
+  if(Wire.available() == 2)
+  {
+    data[0] = Wire.read();
+    data[1] = Wire.read();  
+  }
+  // Convert the data
+  float temperature  = ((data[0] * 256.0) + data[1]);
+  return temperature;
 }
 /*
    Endof Temp/Rh Sensors functions
@@ -235,4 +285,3 @@ void connectToNetwork() {
 /*
    EndOF wifi functions
 */
-
