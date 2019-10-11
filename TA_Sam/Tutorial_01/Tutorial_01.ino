@@ -153,7 +153,7 @@ void setup_modbus() {
   });
 
   modbus.onError([](esp32Modbus::Error error) {
-    Serial.printf("error: 0x%02x\n", static_cast<uint8_t>(error));
+    Serial.printf("EM error: 0x%02x\n", static_cast<uint8_t>(error));
   });
 
   modbus.begin();
