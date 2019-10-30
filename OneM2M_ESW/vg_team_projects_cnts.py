@@ -43,7 +43,7 @@ create_oe(server, cse, prj, node, "oe", "oe_1_")
 create_io_device(server, cse, prj, node, "em", "Energy Meter", "INPUT")
 create_em(server, cse, prj, node, "em", "em_1_")
 create_io_device(server, cse, prj, node, "fm", "Flow Meter", "INPUT")
-create_fm(server, cse, prj, node, "em", "fm_1_")
+create_fm(server, cse, prj, node, "fm", "fm_1_")
 create_io_device(server, cse, prj, node, "ss", "Supply Switch", "OUTPUT")
 create_ss(server, cse, prj, node, "ss", "ss_1_")
 
