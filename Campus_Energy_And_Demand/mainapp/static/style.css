@@ -1,0 +1,23 @@
+body {
+    background: #262A33;
+    color: #fff;
+    font-family: "Lato", sans-serif;
+    overflow-x: hidden;
+}
+.container {
+    margin: 10px;
+    display: inline-block;
+}
+.title {
+    width: 100vw;
+    font-size: 36pt;
+    text-align: center;
+    font-weight: 300;
+}
+.chart-container {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    width: 100%;
+    margin: 100px 0;
+}
