@@ -50,6 +50,7 @@ String energyMeasure() {
 //    Serial.print("current\n");
     retstr += "Current: ";
     modbus.readHoldingRegisters(0x01, 148, 2);
+    delay(1000);
     retstr += energyBuff + "A\n";
     pushCurrent = energyBuff;
     Serial.println(retstr);
@@ -57,7 +58,8 @@ String energyMeasure() {
     delay(1000); 
 //    Serial.print("voltage\n");
     retstr += "Power: ";
-    modbus.readHoldingRegisters(0x01, 140, 2); 
+    modbus.readHoldingRegisters(0x01, 140, 2);
+    delay(1000);
     retstr += energyBuff + "W\n";
     pushVoltage = energyBuff;
     Serial.println(retstr);
@@ -65,7 +67,8 @@ String energyMeasure() {
     delay(1000);
 //    Serial.print("power(watts)\n");
     retstr += "Voltage: ";
-    modbus.readHoldingRegisters(0x01, 140, 2); 
+    modbus.readHoldingRegisters(0x01, 100, 2);
+    delay(1000);
     retstr += energyBuff + "V\n";
     pushPower = energyBuff;
     Serial.println(retstr);
