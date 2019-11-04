@@ -1,0 +1,75 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+.header {
+    height: 20%;
+    background-color: #33b5e5;
+    text-align: center;
+    line-height: 250px;
+    font-size: 30px;
+    color: white;
+    font-weight: bold;
+    font-family: 'Roboto', sans-serif;
+    border-bottom: 8px solid #aa66cc;
+}
+.grid {
+  display: grid;
+  grid-template-areas: "ar1 ar1 ar1 ar2"
+                       "ar3 ar4 ar4 ar4"
+                       "ar5 ar5 ar5 ar6";
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-rows: 900px 900px 900px;
+}
+.ar1{
+    grid-area: ar1;
+    border-bottom: 4px solid black;
+}
+.ar2{
+    grid-area: ar2;
+    background-color: #ffcdd2;
+    text-align: center;
+    font-family: 'Roboto', sans-serif;
+    padding-top: 360px;
+    font-size: 25px;
+    color: red;
+    font-weight: bold;
+    border-bottom: 4px solid black;
+}
+.ar3{
+    grid-area: ar3;
+    background-color: #ffcdd2;
+    text-align: center;
+    font-family: 'Roboto', sans-serif;
+    padding-top: 360px;
+    font-size: 25px;
+    color: red;
+    font-weight: bold;
+    border-bottom: 4px solid black;
+}
+.ar4{
+    grid-area: ar4;
+    border-bottom: 4px solid black;
+}
+.ar5{
+    grid-area: ar5;
+    border-bottom: 4px solid black;
+}
+.ar6{
+    grid-area: ar6;
+    background-color: #ffcdd2;
+    text-align: center;
+    font-family: 'Roboto', sans-serif;
+    padding-top: 360px;
+    font-size: 25px;
+    color: red;
+    font-weight: bold;
+    border-bottom: 4px solid black;
+}
+.analysis{
+    font-size: 22px;
+    font-weight: normal;
+    padding-top: 8px;
+    line-height: 14px;
+    color: black;
+}

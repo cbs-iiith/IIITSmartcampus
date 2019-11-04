@@ -1,0 +1,44 @@
+<html>
+<head>
+    <script type="text/javascript" src = "{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script type="text/javascript" src = "{{ url_for('static', filename='js/plotly.js') }}"></script>
+    <script type="text/javascript" src = "{{ url_for('static', filename='js/script.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+    <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class = "header">
+        DIESEL-GENERATOR PERFORMANCE MONITORING
+    </div>
+    <div class = grid>
+        <div class = "ar1" id = 'temperature_graph'>
+        </div>
+        <div class = "ar2">
+            TEMPERATURE CONDITIONS<br>
+            <div class = 'analysis'>
+                Max-Temperature: <span id = 'max_temp'></span><br><br>
+                Min-Temperature: <span id = 'min_temp'></span><br><br>
+                Average-Temperature: <span id = 'average_temperature'></span><br><br>
+            </div>
+        </div>
+        <div class = "ar3">
+            RELATIVE HUMIDITY<br>
+            <div class = 'analysis'>
+                Max-Humidity: <span id = 'max_humidity'></span><br><br>
+                Min-Humidity: <span id = 'min_humidity'></span><br><br>
+                Average-Humidity: <span id = 'average_humidity'></span><br><br>
+            </div>
+        </div>
+        <div class = "ar4" id = 'humidity_graph'></div>
+        <div class = "ar5" id = 'energy_graph'></div>
+        <div class = "ar6">
+            ENERGY METER READING
+            <div class = 'analysis'>
+                Max-Power: <span id = 'max_power'></span><br><br>
+                Min-Power: <span id = 'min_power'></span><br><br>
+                Average-Power: <span id = 'average_power'></span><br><br>
+                Total Energy Produced: <span id = 'total_energy'></span><br><br>
+            </div>
+        </div>
+    </div>
+</body>
