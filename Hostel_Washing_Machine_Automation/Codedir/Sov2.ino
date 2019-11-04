@@ -391,8 +391,8 @@ pushFlow = "NULL-Value";
   tempMeasure();
   Serial.println(tempStr);
 
-//  previousMillis = millis();
-//  while(!flowMeasure());//
+  previousMillis = millis();
+  while(!flowMeasure());
 
   String energyStr = energyMeasure();
   if(flag)
@@ -410,12 +410,12 @@ pushFlow = "NULL-Value";
   //String masterstr = "(" + pushTemp + "," + pushRH + "," + pushPower + "," + pushCurrent + ")";
 //  pushMyData("em/em_1_vll_avg", masterstr);/
 
-  //pushMyData("em/em_1_vll_avg", pushPower);
-//  pushMyData("fm/fm_1_pump_flowrate", pushFlow);
-  //pushMyData("oe/oe_1_temperature", pushTemp);
-  //pushMyData("oe/oe_1_rh", pushRH);
-  //pushMyData("em/em_1_watts_total", pushVoltage);
-  //pushMyData("em/em_1_current_total", pushCurrent);
+  pushMyData("em/em_1_vll_avg", pushPower);
+ pushMyData("fm/fm_1_pump_flowrate", pushFlow);
+  pushMyData("oe/oe_1_temperature", pushTemp);
+  pushMyData("oe/oe_1_rh", pushRH);
+  pushMyData("em/em_1_watts_total", pushVoltage);
+  pushMyData("em/em_1_current_total", pushCurrent);
   Serial.printf("\nPushed\n");
 
   delay(10000); // DO NOT CHANGE THIS LINE 10 min delay
