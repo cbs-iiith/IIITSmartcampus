@@ -46,9 +46,12 @@
 #define EM_IDX_FREQUENCY               28
 #define EM_IDX_VRY_PHASE               17
 
-const char* ssid = "CBS Beam";
-//const char* ssid = "CBS Beam 5GHz";   //not working, unable to connect ti 5GHz n/w
-const char* password = "Bsrc12#$";
+//const char* ssid = "CBS Beam";
+//const char* password = "Bsrc12#$";
+//const char* ssid = "CBS Beam 5GHz";   //not working, unable to connect to 5GHz n/w
+//const char* password = "Bsrc12#$";
+const char* ssid = "esw-m19@iiith";
+const char* password = "e5W-eMai@3!20hOct";
 
 void setup_wifi();
 void scanNetworks();
