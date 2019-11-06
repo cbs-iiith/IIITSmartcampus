@@ -1,3 +1,5 @@
+#include <HTTPClient.h>
+
 #include <WiFi.h>
 
 #include <Arduino.h>
@@ -53,6 +55,11 @@
 const char* ssid = "esw-m19@iiith";
 const char* password = "e5W-eMai@3!20hOct";
 
+//String cse_ip = "139.59.42.21";
+String cse_ip = "10.4.21.131";
+String cse_port = "8080";
+String server = "http://" + cse_ip + ":" + cse_port + "/~/in-cse/in-name/";
+
 void setup_wifi();
 void scanNetworks();
 void connectToNetwork();
@@ -62,6 +69,8 @@ void setup_modbus();
 void sensor_temp_rh();
 void energy_meter();
 
+String createCI(String server, String ae, String cnt, String val);
+
 //Buffer t store Temperature & Humity values
 float* sht21_buffer = new float[2];
 
@@ -69,6 +78,8 @@ float* sht21_buffer = new float[2];
 float* em_buffer = new float[EM_REG_LEN / 2];
 
 esp32ModbusRTU modbus(&Serial1, UART_RTS);
+
+bool publish_once = true;
 
 void setup() {
   // put your setup code here, to run once:
@@ -94,6 +105,13 @@ void loop() {
   // put your main code here, to run repeatedly:
   sensor_temp_rh();
   energy_meter();
+  if (publish_once == true) { 
+    String pathh = "pr_5_esp32_1/em/em_1_vll_avg";
+    Serial.printf("Publishing to server...");
+    createCI(server, "Team43_UPS_performance_monitoring", pathh, "16");  
+    Serial.printf("Done\n");
+    publish_once = false;
+  }
 }
 
 
@@ -238,3 +256,23 @@ void connectToNetwork() {
 /*
    EndOF wifi functions
 */
+
+String createCI(String server, String ae, String cnt, String val)
+{
+  HTTPClient http;
+  http.begin(server + ae + "/" + cnt + "/");
+  http.addHeader("X-M2M-Origin", "admin:admin");
+  http.addHeader("Content-Type", "application/json;ty=4");
+  http.addHeader("Content-Length", "100");
+  http.addHeader("Connection", "close");
+  int code = http.POST("{\"m2m:cin\": {\"cnf\": \"text/plain:0\",\"con\": "+ String(val) +"}}");
+  http.end();
+  Serial.println(code);
+  if(code==-1){
+    Serial.println("UNABLE TO CONNECT TO THE SERVER");
+    //ledFlag=0;
+    //ledUpdate();
+  }
+  delay(300);
+
+}
