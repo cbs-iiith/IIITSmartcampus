@@ -48,17 +48,21 @@
 #define EM_IDX_FREQUENCY               28
 #define EM_IDX_VRY_PHASE               17
 
-//const char* ssid = "CBS Beam";
-//const char* password = "Bsrc12#$";
+const char* ssid = "CBS Beam";
+const char* password = "Bsrc12#$";
 //const char* ssid = "CBS Beam 5GHz";   //not working, unable to connect to 5GHz n/w
 //const char* password = "Bsrc12#$";
-const char* ssid = "esw-m19@iiith";
-const char* password = "e5W-eMai@3!20hOct";
+//const char* ssid = "esw-m19@iiith";
+//const char* password = "e5W-eMai@3!20hOct";
 
+String cse_ip = "onem2m.iiit.ac.in";
+String cse_port = "443";
 //String cse_ip = "139.59.42.21";
-String cse_ip = "10.4.21.131";
-String cse_port = "8080";
-String server = "http://" + cse_ip + ":" + cse_port + "/~/in-cse/in-name/";
+//String cse_ip = "10.4.21.131";
+//String cse_port = "8080";
+
+String server = "https://" + cse_ip + ":" + cse_port + "/~/in-cse/in-name/";
+//String server = "http://" + cse_ip + ":" + cse_port + "/~/in-cse/in-name/";
 
 void setup_wifi();
 void scanNetworks();
@@ -89,6 +93,7 @@ void setup() {
   setup_wifi();
   Serial.printf("Done!\n");
   Serial.println("####################################################################################################");
+  /*
   Serial.printf("Starting I2C...");
   setup_i2c();
   Serial.printf("Success!\n");
@@ -99,16 +104,22 @@ void setup() {
   Serial.printf("Done!\n");
   Serial.println("###################################### Endof Setup #################################################");
   Serial.println("###################################### Starting Loop ###############################################");
+  */
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  sensor_temp_rh();
-  energy_meter();
+  //sensor_temp_rh();
+  //energy_meter();
   if (publish_once == true) { 
-    String pathh = "pr_5_esp32_1/em/em_1_vll_avg";
+    //http://onem2m.iiit.ac.in:443/~/in-cse/in-name/Team40_DG_performance_monitoring/pr_2_esp32_1/em/em_1_vll_avg
+    //http://onem2m.iiit.ac.in:443/~/in-cse/in-name/Team43_UPS_performance_monitoring/pr_5_esp32_1/em/em_1_vll_avg
+    String project = "Team43_UPS_performance_monitoring";
+    String path_measure = "pr_5_esp32_1/em/em_1_vll_avg";
     Serial.printf("Publishing to server...");
-    createCI(server, "Team43_UPS_performance_monitoring", pathh, "16");  
+    int val = 17;
+    String send_val = "\"" + String(val) + "\"";
+    createCI(server, project, path_measure, send_val);  
     Serial.printf("Done\n");
     publish_once = false;
   }
@@ -196,10 +207,11 @@ void energy_meter() {
    Start wifi functions
 */
 void setup_wifi() {
+  Serial.println(WiFi.macAddress());
+  
   scanNetworks();
   connectToNetwork();
 
-  Serial.println(WiFi.macAddress());
   Serial.println(WiFi.localIP());
 }
 
@@ -265,10 +277,12 @@ String createCI(String server, String ae, String cnt, String val)
   http.addHeader("Content-Type", "application/json;ty=4");
   http.addHeader("Content-Length", "100");
   http.addHeader("Connection", "close");
-  int code = http.POST("{\"m2m:cin\": {\"cnf\": \"text/plain:0\",\"con\": "+ String(val) +"}}");
+  Serial.println("http.post");
+  Serial.println("{\"m2m:cin\": {\"cnf\": \"text/plain:0\",\"con\": "+ val +"}}");
+  int code = http.POST("{\"m2m:cin\": {\"cnf\": \"text/plain:0\",\"con\": "+ val +"}}");
   http.end();
   Serial.println(code);
-  if(code==-1){
+  if(code == -1){
     Serial.println("UNABLE TO CONNECT TO THE SERVER");
     //ledFlag=0;
     //ledUpdate();
