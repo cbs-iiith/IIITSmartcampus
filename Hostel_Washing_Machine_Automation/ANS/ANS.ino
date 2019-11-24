@@ -1,9 +1,22 @@
+
+//------------------------------------------------------------------------------------
+/*
+      HOSTEL-WASHING MACHINE MONITORING AND AUTOMATION
+
+*/
+//  -----------------------------------------------------------------------------------------------------
+
+
+
 #include "WiFi.h"
 #include "HTTPClient.h"
 #include "ArduinoJson.h"
 
 //  =======================================================================================================
+#define RELAY 15
 
+
+// Initialising string values to 0
 String pushCurrent = "0 ";
 String pushVoltage = "0 ";
 String pushPower = "0 ";
@@ -12,8 +25,7 @@ String pushRH = "0 ";
 String pushFlow = "0 ";
 String pushEnergy = "0";
 String pushTotflow = "0";
-int flag=0;
-int fg =0;
+
 //  =======================================================================================================
 //  ---------------------------------------------- Energy Meter -------------------------------------------
 //  =======================================================================================================
@@ -26,8 +38,8 @@ String energyBuff = "NULL-Value";
 esp32ModbusRTU modbus(&Serial1, 25);  // use Serial1 and pin 16 as RTS
 
 /*
- * 
-  SUCCES                = 0x00,
+ *
+  SUCCESS                = 0x00,
   ILLEGAL_FUNCTION      = 0x01,
   ILLEGAL_DATA_ADDRESS  = 0x02,
   ILLEGAL_DATA_VALUE    = 0x03,
@@ -44,63 +56,34 @@ esp32ModbusRTU modbus(&Serial1, 25);  // use Serial1 and pin 16 as RTS
  */
 
 
+
+// This function obtains values from the Energy meter by reading its holding registers through Modbus protocol.
+// These are then assigned to separate strings, which will be later pushed into OneM2M.
 String energyMeasure() {
-
-//    Serial.print("sending Modbus request...\n");
     String retstr = "";
-    
-    //readHoldingRegisters(uint8_t slaveAddress, uint16_t address, uint16_t numberRegisters)
-//    Serial.print("current\n");
-    retstr += "Current: ";
-//    fg=1;
-    modbus.readHoldingRegisters(0x01, 148, 2);
-//    while(fg==1)
-//    {
-//      delay(10);
-//    }
-    delay(3000);
-    retstr += energyBuff + "A\n";
-    pushCurrent = energyBuff;
-    Serial.println(retstr);
-
-    fg=1;
-    delay(3000); 
-//    Serial.print("voltage\n");
     retstr += "Power: ";
     modbus.readHoldingRegisters(0x01, 100, 2);
-    //while(fg==1)
-    //{
-    //  delay(10);
-    //}
     delay(3000);
     retstr += energyBuff + "W\n";
     pushPower = energyBuff;
     Serial.println(retstr);
 
-
-    fg=1;
+    retstr += "Current: ";
+    modbus.readHoldingRegisters(0x01, 148, 2);
     delay(3000);
-//    Serial.print("power(watts)\n");
+    retstr += energyBuff + "A\n";
+    pushCurrent = energyBuff;
+    Serial.println(retstr);
+
     retstr += "Voltage: ";
     modbus.readHoldingRegisters(0x01, 140, 2);
-    //while(fg==1)
-    //{
-    //  delay(10);
-    //}
     delay(3000);
     retstr += energyBuff + "V\n";
     pushVoltage = energyBuff;
     Serial.println(retstr);
 
-    fg=1;
-//    delay(1000);
-//    Serial.print("power(watts)\n");
     retstr += "Energy: ";
     modbus.readHoldingRegisters(0x01, 158, 2);
-    //while(fg==1)
-    //{
-    //  delay(10);
-    //}
     delay(3000);
     retstr += energyBuff + "Wh\n";
     pushEnergy = energyBuff;
@@ -127,13 +110,13 @@ String tempStr;
 void tempMeasure()
 {
   unsigned int data[2];
-  
+
   Wire.beginTransmission(si7021Addr);
   //Send humidity measurement command
   Wire.write(0xF5);
   Wire.endTransmission();
   delay(500);
-    
+
   // Request 2 bytes of data
   Wire.requestFrom(si7021Addr, 2);
   // Read 2 bytes of data to get humidity
@@ -142,7 +125,7 @@ void tempMeasure()
     data[0] = Wire.read();
     data[1] = Wire.read();
   }
-    
+
   // Convert the data
   float humidity  = ((data[0] * 256.0) + data[1]);
   humidity = ((125 * humidity) / 65536.0) - 6;
@@ -152,10 +135,10 @@ void tempMeasure()
   Wire.write(0xF3);
   Wire.endTransmission();
   delay(500);
-    
+
   // Request 2 bytes of data
   Wire.requestFrom(si7021Addr, 2);
-  
+
   // Read 2 bytes of data for temperature
   if(Wire.available() == 2)
   {
@@ -167,18 +150,7 @@ void tempMeasure()
   float temp  = ((data[0] * 256.0) + data[1]);
   float celsTemp = ((175.72 * temp) / 65536.0) - 46.85;
   float fahrTemp = celsTemp * 1.8 + 32;
-   
-  // Output data to serial monitor
-//  Serial.print("Humidity : ");
-//  Serial.print(humidity);
-//  Serial.println(" % RH");
-//  Serial.print("Celsius : ");
-//  Serial.print(celsTemp);
-//  Serial.println(" C");
-//  Serial.print("Fahrenheit : ");
-//  Serial.print(fahrTemp);
-//  Serial.println(" F");
-  
+
   tempStr = "Humidity : " + (String)humidity + " % RH" + "\n";
   tempStr += "Celsius : " + (String)celsTemp + " C" + "\n" + "Fahrenheit : " + (String)fahrTemp + " F" + "\n";
   pushRH = (String)humidity;
@@ -190,23 +162,16 @@ void tempMeasure()
 
 
 //  ========================================================================================================
-//  ---------------------------------------------- Flow meter ---------------------------------------------- 
+//  ---------------------------------------------- Flow meter ----------------------------------------------
 //  ========================================================================================================
-#define LED_BUILTIN 2
-//#define SENSOR  14
 #define SENSOR  13
 
-long currentMillis = 0;
-long previousMillis = 0;
-int interval = 1000;
-boolean ledState = LOW;
 float calibrationFactor = 4.5;
 volatile byte pulseCount;
 byte pulse1Sec = 0;
 float flowRate;
 unsigned int flowMilliLitres;
 unsigned long totalMilliLitres;
-//String flowStr;
 
 void IRAM_ATTR pulseCounter()
 {
@@ -215,19 +180,9 @@ void IRAM_ATTR pulseCounter()
 
 int flowMeasure()
 {
-  currentMillis = millis();
-  if (currentMillis - previousMillis > interval) {
-    
-    pulse1Sec = pulseCount;
     pulseCount = 0;
-
-    // Because this loop may not complete in exactly 1 second intervals we calculate
-    // the number of milliseconds that have passed since the last execution and use
-    // that to scale the output. We also apply the calibrationFactor to scale the output
-    // based on the number of pulses per second per units of measure (litres/minute in
-    // this case) coming from the sensor.
-    flowRate = ((1000.0 / (millis() - previousMillis)) * pulse1Sec) / calibrationFactor;
-    previousMillis = millis();
+    delay(1000);
+    flowRate = ( pulse1Sec / calibrationFactor);
 
     // Divide the flow rate in litres/minute by 60 to determine how many litres have
     // passed through the sensor in this 1 second interval, then multiply by 1000 to
@@ -236,7 +191,7 @@ int flowMeasure()
 
     // Add the millilitres passed in this second to the cumulative total
     totalMilliLitres += flowMilliLitres;
-    
+
     // Print the flow rate for this second in litres / minute
     Serial.print("Flow rate: ");
     Serial.print(int(flowRate));  // Print the integer part of the variable
@@ -254,50 +209,28 @@ int flowMeasure()
     pushFlow = (String)((float)(flowRate));
     pushTotflow = (String)((float)(totalMilliLitres));
 //    flowStr += "Output Liquid Quantity: " + (String)totalMilliLitres + "mL / " + (String)(totalMilliLitres / 1000) + "L" + "\n";
-    return 1;
-  }
-  return 0;
+  return 1;
 }
 
 //  -------------------------------------------------------------------------------------------------------
 //  =======================================================================================================
+//-------------------------------------------WiFi and server connections-----------------------------------
+//  =======================================================================================================
 
-///char* wifi_ssid = "ChandlerBing";
-//cha/r* wifi_pwd = "smellycatgeller";
 char* wifi_ssid="esw-m19@iiith";
 char* wifi_pwd="e5W-eMai@3!20hOct";
 
-///String cse_ip = "139.59.42.21";
-//String cse_ip = "10.4.21.131";
 String cse_ip = "onem2m.iiit.ac.in";
-//String cse_port = "8080";
 String cse_port = "443";
-
-int ledFlag=0;
-int LED_R = 4;
-int LED_G = 5; 
 
 //  =======================================================================================================
 //  ---------------------------------------------- One M2M ------------------------------------------------
 //  =======================================================================================================
 
 StaticJsonBuffer<200> jsonBuffer;
-//JsonObject& user_data = jsonBuffer.createObject();
-//JsonObject& temp_user_data = jsonBuffer.createObject();
-//JsonObject& sensor_data = jsonBuffer.createObject();
 
 
 String server = "http://"+cse_ip+":"+cse_port+"/~/in-cse/in-name/";
-void ledUpdate(){
-  if(ledFlag==1){
-    digitalWrite(LED_R,0);
-    digitalWrite(LED_G,1);
-  }
-  else{
-    digitalWrite(LED_R,1);
-    digitalWrite(LED_G,0);
-  }
-}
 
 String createCI(String server, String ae, String cnt, String val)
 {
@@ -312,20 +245,19 @@ String createCI(String server, String ae, String cnt, String val)
   Serial.println(code);
   if(code==-1){
     Serial.println("UNABLE TO CONNECT TO THE SERVER");
-    ledFlag=0;
-    ledUpdate();
   }
   delay(300);
 }
 
+//This function calls createCI to push data into the container of the onem2m resource tree that is specified
 void pushMyData(String pathh, String val){
   val = "\"" + val + "\"";
   pathh = "pr_3_esp32_1/"+pathh;
-  //pathh = "pr_3_esp32_1";
-  createCI(server, "Team15_Hostel_washing_machine_automation", pathh, val);  
+  createCI(server, "Team15_Hostel_washing_machine_automation", pathh, val);
 }
 
 
+// sendGet() is used for obtaining the value of the latest instance in a container from the OneM2M resource tree.
 String sendGET(String url)
 {
     StaticJsonBuffer<300> jsonBuffer;
@@ -337,16 +269,16 @@ String sendGET(String url)
     String payload = "";
     char json[300];
     const char* value = 0;
-   
-    if (httpCode > 0) 
-    { 
+
+    if (httpCode > 0)
+    {
       payload = http.getString();   //Get the request response payload
-      Serial.printf("Payload\n"); 
+      Serial.printf("Payload\n");
       Serial.print(payload);
       payload.toCharArray(json, 300);
       JsonObject& root = jsonBuffer.parseObject(json);
 //    Test if parsing /succeeds.
-      if (!root.success()) 
+      if (!root.success())
       {
         Serial.println("parseObject() failed");
       }
@@ -364,10 +296,10 @@ String sendGET(String url)
 
 //  -------------------------------------------------------------------------------------------------------
 //  =======================================================================================================
-
+//  --------------------------------------------Connecting to WiFi-----------------------------------------
+//  =======================================================================================================
 
 void connect_to_WIFI(){
-  int flag=1;
   WiFi.mode(WIFI_STA);// Set WiFi to station mode and disconnect from an AP if it was previously connected
   WiFi.disconnect();
   delay(100);
@@ -379,11 +311,9 @@ void connect_to_WIFI(){
   }
   if(WiFi.status()==WL_CONNECTED){
     Serial.println("Connected to the WiFi network");
-    ledFlag=1;
-    ledUpdate();
   }
   else{
-    
+
   }
   Serial.println("Connected to the WiFi network");
 }
@@ -391,13 +321,10 @@ void connect_to_WIFI(){
 void setup()
 {
   Serial.begin(115200);
-  ledUpdate();
   connect_to_WIFI();
 
-  pinMode(LED_R, OUTPUT);
-  pinMode(LED_G,OUTPUT);
-  pinMode(15,OUTPUT);
-  digitalWrite(15, HIGH);
+  pinMode(RELAY,OUTPUT);
+  digitalWrite(RELAY, HIGH);
   Serial.println("Setup done");
 
 //  ========================================================================================================
@@ -408,12 +335,12 @@ void setup()
 
   modbus.onData([](uint8_t serverAddress, esp32Modbus::FunctionCode fc, uint8_t* data, size_t length) {
 //    Serial.printf("id 0x%02x fc 0x%02x len %u: 0x", serverAddress, fc, length);
-    
+
     for (size_t i = 0; i < length; ++i) {
       //Serial.printf("%02x", data[i]);
 //      Serial.printf("\n/%.2f\n",data[i]);
     }
-    
+
     uint8_t data2[4];
     data2[0] = data[1];
     data2[1] = data[0];
@@ -422,12 +349,8 @@ void setup()
 
 //    Serial.printf("\nval: %.2f", *reinterpret_cast<float*>(data2));
     energyBuff = (String)(*reinterpret_cast<float*>(data2));
-    flag=1;
-    fg=0;
   });
   modbus.onError([](esp32Modbus::Error error) {
-    flag=0;
-    fg=0;
     Serial.printf("Got error: 0x%02x\n\n", static_cast<uint8_t>(error));
   });
   modbus.begin();
@@ -436,19 +359,17 @@ void setup()
 
 
 //  ========================================================================================================
-//  ---------------------------------------------- Flow meter ---------------------------------------------- 
+//  ---------------------------------------------- Flow meter ----------------------------------------------
 //  ========================================================================================================
 
-  pinMode(LED_BUILTIN, OUTPUT);
   pinMode(SENSOR, INPUT_PULLUP);
 
   pulseCount = 0;
   flowRate = 0.0;
   flowMilliLitres = 0;
   totalMilliLitres = 0;
-  previousMillis = 0;
 
-  attachInterrupt(digitalPinToInterrupt(SENSOR), pulseCounter, FALLING);
+  attachInterrupt(digitalPinToInterrupt(SENSOR), pulseCounter, RISING);
 
 //  -------------------------------------------------------------------------------------------------------
 
@@ -469,7 +390,6 @@ void loop()
 {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("Connection lost.. trying to reconnect");
-    ledFlag=0;ledUpdate();
     connect_to_WIFI();
   }
 
@@ -482,51 +402,36 @@ pushFlow = "NULL-Value";
 pushTotflow = "NULL-Value";
 pushEnergy = "NULL-Value";
 
-  tempMeasure();
-  Serial.println(tempStr);
+tempMeasure();
+Serial.println(tempStr);
 
-//  previousMillis = millis();
-  
-//  while(!flowMeasure());
+flowMeasure();
 
-  flowMeasure();
-  
-  String energyStr = energyMeasure();
-  if(flag)
-  {
-    Serial.printf("Printing energyStr\n");
-    Serial.print(energyStr);
-  }
-  else
-  {
-    Serial.println("Error in getting from meter");
-  }
-  // Send data to OneM2M server
+String energyStr = energyMeasure();
+
+Serial.printf("Printing energyStr\n");
+Serial.print(energyStr);
 
 Serial.printf("Flowrate: ");
 Serial.println(pushFlow);
-//pushCurrent = "0";/
-//pushVoltage = "0";/
-//pushPower = "0";/
-//pushTemp = "0";/
-//pushRH = "0";/
-//pushFlow = "0";/
 
-  //String masterstr = "(" + pushTemp + "," + pushRH + "," + pushPower + "," + pushCurrent + ")";
-//  pushMyData("em/em_1_vll_avg", masterstr);/
-  
+
+  //We push the values into oneM2M by keeping a 10-second delay between each parameter. During the time in between, we keep checking
+  //the status of the washing machine, as to whether clicked "On" or "Off".
+
+
   pushMyData("em/em_1_watts_total", pushPower);
   delay(10000);
-//
+
   String value = sendGET(server + "Team15_Hostel_washing_machine_automation" + "/pr_3_esp32_1/ss/ss_1_control_signal/la");
   if(value=="1")
     {
-      digitalWrite(15, HIGH);
+      digitalWrite(RELAY, HIGH);
       Serial.printf("\nActuator on\n");
     }
     else if(value=="0")
     {
-      digitalWrite(15, LOW);
+      digitalWrite(RELAY, LOW);
       Serial.printf("\nActuator off\n");
     }
     else
@@ -534,19 +439,20 @@ Serial.println(pushFlow);
       Serial.println("Invalid");
     }
      Serial.printf("\nActuator used\n");
-     
+
+
   pushMyData("em/em_1_var_total", pushEnergy);
   delay(10000);
 
   value = sendGET(server + "Team15_Hostel_washing_machine_automation" + "/pr_3_esp32_1/ss/ss_1_control_signal/la");
   if(value=="1")
     {
-      digitalWrite(15, HIGH);
+      digitalWrite(RELAY, HIGH);
       Serial.printf("\nActuator on\n");
     }
     else if(value=="0")
     {
-      digitalWrite(15, LOW);
+      digitalWrite(RELAY, LOW);
       Serial.printf("\nActuator off\n");
     }
     else
@@ -554,19 +460,19 @@ Serial.println(pushFlow);
       Serial.println("Invalid");
     }
      Serial.printf("\nActuator used\n");
-     
+
   pushMyData("fm/fm_1_pump_flowrate", pushFlow);
   delay(10000);
 
   value = sendGET(server + "Team15_Hostel_washing_machine_automation" + "/pr_3_esp32_1/ss/ss_1_control_signal/la");
   if(value=="1")
     {
-      digitalWrite(15, HIGH);
+      digitalWrite(RELAY, HIGH);
       Serial.printf("\nActuator on\n");
     }
     else if(value=="0")
     {
-      digitalWrite(15, LOW);
+      digitalWrite(RELAY, LOW);
       Serial.printf("\nActuator off\n");
     }
     else
@@ -574,19 +480,19 @@ Serial.println(pushFlow);
       Serial.println("Invalid");
     }
      Serial.printf("\nActuator used\n");
-     
+
   pushMyData("fm/fm_1_pump_capacity",pushTotflow);
   delay(10000);
 
   value = sendGET(server + "Team15_Hostel_washing_machine_automation" + "/pr_3_esp32_1/ss/ss_1_control_signal/la");
   if(value=="1")
     {
-      digitalWrite(15, HIGH);
+      digitalWrite(RELAY, HIGH);
       Serial.printf("\nActuator on\n");
     }
     else if(value=="0")
     {
-      digitalWrite(15, LOW);
+      digitalWrite(RELAY, LOW);
       Serial.printf("\nActuator off\n");
     }
     else
@@ -594,19 +500,19 @@ Serial.println(pushFlow);
       Serial.println("Invalid");
     }
      Serial.printf("\nActuator used\n");
-     
+
   pushMyData("oe/oe_1_temperature", pushTemp);
   delay(10000);
 
   value = sendGET(server + "Team15_Hostel_washing_machine_automation" + "/pr_3_esp32_1/ss/ss_1_control_signal/la");
   if(value=="1")
     {
-      digitalWrite(15, HIGH);
+      digitalWrite(RELAY, HIGH);
       Serial.printf("\nActuator on\n");
     }
     else if(value=="0")
     {
-      digitalWrite(15, LOW);
+      digitalWrite(RELAY, LOW);
       Serial.printf("\nActuator off\n");
     }
     else
@@ -614,19 +520,19 @@ Serial.println(pushFlow);
       Serial.println("Invalid");
     }
      Serial.printf("\nActuator used\n");
-     
+
   pushMyData("oe/oe_1_rh", pushRH);
   delay(10000);
 
   value = sendGET(server + "Team15_Hostel_washing_machine_automation" + "/pr_3_esp32_1/ss/ss_1_control_signal/la");
   if(value=="1")
     {
-      digitalWrite(15, HIGH);
+      digitalWrite(RELAY, HIGH);
       Serial.printf("\nActuator on\n");
     }
     else if(value=="0")
     {
-      digitalWrite(15, LOW);
+      digitalWrite(RELAY, LOW);
       Serial.printf("\nActuator off\n");
     }
     else
@@ -634,19 +540,19 @@ Serial.println(pushFlow);
       Serial.println("Invalid");
     }
      Serial.printf("\nActuator used\n");
-     
-//  pushMyData("em/em_1_vll_avg", pushVoltage);
-//  delay(10000);
+
+ pushMyData("em/em_1_vll_avg", pushVoltage);
+ delay(10000);
 
   value = sendGET(server + "Team15_Hostel_washing_machine_automation" + "/pr_3_esp32_1/ss/ss_1_control_signal/la");
   if(value=="1")
     {
-      digitalWrite(15, HIGH);
+      digitalWrite(RELAY, HIGH);
       Serial.printf("\nActuator on\n");
     }
     else if(value=="0")
     {
-      digitalWrite(15, LOW);
+      digitalWrite(RELAY, LOW);
       Serial.printf("\nActuator off\n");
     }
     else
@@ -654,25 +560,24 @@ Serial.println(pushFlow);
       Serial.println("Invalid");
     }
      Serial.printf("\nActuator used\n");
-     
+
   pushMyData("em/em_1_current_total", pushCurrent);
   delay(10000);
-  
+
   Serial.printf("\nPushed\n");
 
 
      value = sendGET(server + "Team15_Hostel_washing_machine_automation" + "/pr_3_esp32_1/ss/ss_1_control_signal/la");
 
 
-///    int value = 1;
     if(value=="1")
     {
-      digitalWrite(15, HIGH);
+      digitalWrite(RELAY, HIGH);
       Serial.printf("\nActuator on\n");
     }
     else if(value=="0")
     {
-      digitalWrite(15, LOW);
+      digitalWrite(RELAY, LOW);
       Serial.printf("\nActuator off\n");
     }
     else
@@ -681,8 +586,7 @@ Serial.println(pushFlow);
     }
      Serial.printf("\nActuator used\n");
 
-     
-  delay(10000); // DO NOT CHANGE THIS LINE 10 min delay
-//  while(1);
-  
+
+  delay(10000); // DO NOT CHANGE THIS LINE 10 sec delay
+
 }
